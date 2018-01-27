@@ -2,7 +2,7 @@
 var express  = require('express');
 var app      = express();
 var aws      = require('aws-sdk');
-var queueUrl = "";
+var queueUrl = "https://sqs.us-west-1.amazonaws.com/276347759228/MyFirstQueue";
 var receipt  = "";
     
 // Load your AWS credentials and try to instantiate the object.
@@ -14,12 +14,13 @@ var sqs = new aws.SQS();
 // Creating a queue.
 
 app.get('/test', function (req, res) {
-    console.log(req);
+	console.log(sqs)
     res.send('hello world')
 });
 
 
 app.get('/create', function (req, res) {
+	console.log(req)
     var params = {
         QueueName: "MyFirstQueue"
     };
