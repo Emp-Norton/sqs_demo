@@ -2,8 +2,9 @@
 var express  = require('express');
 var app      = express();
 var aws      = require('aws-sdk');
-var queueUrl = "https://sqs.us-west-1.amazonaws.com/276347759228/MyFirstQueue";
+var queueUrl = "https://sqs.us-west-1.amazonaws.com/276347759228/";
 var receipt  = "";
+var currentQueue = "";
     
 // Load your AWS credentials and try to instantiate the object.
 aws.config.loadFromPath(__dirname + '/config.json');
@@ -13,16 +14,10 @@ var sqs = new aws.SQS();
 
 // Creating a queue.
 
-app.get('/test', function (req, res) {
-	console.log(sqs)
-    res.send('hello world')
-});
 
-
-app.get('/create', function (req, res) {
-	console.log(req)
+app.get('/create/:name', function (req, res) {
     var params = {
-        QueueName: "MyFirstQueue"
+        QueueName:  req.params.name
     };
     
     sqs.createQueue(params, function(err, data) {
@@ -30,6 +25,7 @@ app.get('/create', function (req, res) {
             res.send(err);
         } 
         else {
+	console.log(data.QueueUrl)
             res.send(data);
         } 
     });
@@ -50,10 +46,10 @@ app.get('/list', function (req, res) {
 // Sending a message.
 // NOTE: Here we need to populate the queue url you want to send to.
 // That variable is indicated at the top of app.js.
-app.get('/send/:message', function (req, res) {
+app.get('/send/:queue/:message', function (req, res) {
     var params = {
         MessageBody: req.params.message,
-        QueueUrl: queueUrl,
+        QueueUrl: queueUrl + req.params.queue, 
         DelaySeconds: 0
     };
 
@@ -73,10 +69,10 @@ app.get('/send/:message', function (req, res) {
 // records. In this example I'm just showing you how to make the call.
 // It will then put the message "in flight" and I won't be able to 
 // reach that message again until that visibility timeout is done.
-app.get('/receive', function (req, res) {
-
+app.get('/receive/:queue', function (req, res) {
+	currentQueue = req.params.queue;
     var params = {
-        QueueUrl: queueUrl,
+        QueueUrl: queueUrl + req.params.queue,
         VisibilityTimeout: 600 // 10 min wait time for anyone else to process.
     };
     
@@ -96,7 +92,7 @@ app.get('/receive', function (req, res) {
 // Deleting a message.
 app.get('/delete', function (req, res) {
 	 var params = {
-        QueueUrl: queueUrl,
+        QueueUrl: queueUrl + currentQueue,
         ReceiptHandle: receipt
     };
     
