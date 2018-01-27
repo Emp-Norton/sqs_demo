@@ -12,6 +12,13 @@ aws.config.loadFromPath(__dirname + '/config.json');
 var sqs = new aws.SQS();
 
 // Creating a queue.
+
+app.get('/test', function (req, res) {
+    console.log(req);
+    res.send('hello world')
+});
+
+
 app.get('/create', function (req, res) {
     var params = {
         QueueName: "MyFirstQueue"
