@@ -3,8 +3,8 @@ var express  = require('express');
 var app      = express();
 var aws      = require('aws-sdk');
 var queueUrl = "https://sqs.us-west-1.amazonaws.com/276347759228/";
-var receipt  = "";
 var currentQueue = "";
+var messageHistory = {};
     
 // Load your AWS credentials and try to instantiate the object.
 aws.config.loadFromPath(__dirname + '/config.json');
@@ -75,14 +75,17 @@ app.get('/receive/:queue', function (req, res) {
         QueueUrl: queueUrl + req.params.queue,
         VisibilityTimeout: 600 // 10 min wait time for anyone else to process.
     };
-    
+	    
     sqs.receiveMessage(params, function(err, data) {
         if(err) {
             res.send(err);
         } 
         else {
-	  receipt = data.Messages[0].ReceiptHandle
-	  console.log(receipt)
+	  var receipt = data.Messages[0].ReceiptHandle
+	  var id = data.Messages[0].MessageId
+	  messageHistory[id] = receipt;
+	 currentQueue = req.params.queue;
+	currentMessageId = messageHistory[id]; 
             res.send(data);
         } 
     });
@@ -101,7 +104,7 @@ app.get('/delete', function (req, res) {
             res.send(err);
         } 
         else {
-		console.log('deleting message ' + receipt)
+    	console.log('deleting message ')
             res.send(data);
         } 
     });
