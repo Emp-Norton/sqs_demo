@@ -5,6 +5,7 @@ var aws      = require('aws-sdk');
 var queueUrl = "https://sqs.us-west-1.amazonaws.com/276347759228/";
 var currentQueue = "";
 var messageHistory = {};
+var currentMessages = [];
     
 // Load your AWS credentials and try to instantiate the object.
 aws.config.loadFromPath(__dirname + '/config.json');
@@ -85,7 +86,9 @@ app.get('/receive/:queue', function (req, res) {
 	  var id = data.Messages[0].MessageId
 	  messageHistory[id] = receipt;
 	 currentQueue = req.params.queue;
-	currentMessageId = messageHistory[id]; 
+	 currentMessages.push(id); 
+	console.log(currentMessages);
+	console.log(messageHistory);
             res.send(data);
         } 
     });
@@ -96,15 +99,18 @@ app.get('/receive/:queue', function (req, res) {
 app.get('/delete', function (req, res) {
 	 var params = {
         QueueUrl: queueUrl + currentQueue,
-        ReceiptHandle: receipt
+        ReceiptHandle: messageHistory[currentMessages[currentMessages.length - 1]]
     };
-    
+	console.log(params)    
     sqs.deleteMessage(params, function(err, data) {
         if(err) {
             res.send(err);
         } 
         else {
     	console.log('deleting message ')
+	currentMessages.pop();
+	console.log(currentMessages)
+	console.log(messageHistory)
             res.send(data);
         } 
     });
